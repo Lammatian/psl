@@ -51,7 +51,11 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
     // Keep an internal store to hold the terms while this class focus on variables.
     private TermStore<ADMMObjectiveTerm, ?> store;
 
-    private Map<RandomVariableAtom, Integer> variableIndexes;
+    public Map<RandomVariableAtom, Integer> variableIndexes;
+    private Map<String, Integer> variableStringIndexes;
+    // MATT: Required because we're not using RVAs
+    public ArrayList<Float> varVals;
+//    private Map<String, Float> variableValues;
 
     // Global variable index to local variables.
     private List<List<LocalVariable>> localVariables;
@@ -69,6 +73,8 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
     public ADMMTermStore(TermStore<ADMMObjectiveTerm, ?> store) {
         this.store = store;
         variableIndexes = new HashMap<RandomVariableAtom, Integer>();
+        variableStringIndexes = new HashMap<>();
+        varVals = new ArrayList<>();
         localVariables = new ArrayList<List<LocalVariable>>();
         numLocalVariables = 0;
     }
@@ -87,6 +93,12 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
             // If there are no variables, then re-allocate the variable storage.
             // The default load factor for Java HashMaps is 0.75.
             variableIndexes = new HashMap<RandomVariableAtom, Integer>((int)Math.ceil(capacity / 0.75));
+        }
+
+        if (variableStringIndexes.size() == 0) {
+            // If there are no variables, then re-allocate the variable storage.
+            // The default load factor for Java HashMaps is 0.75.
+            variableStringIndexes = new HashMap<>((int)Math.ceil(capacity / 0.75));
         }
     }
 
@@ -113,12 +125,37 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
         return localVariable;
     }
 
+    public LocalVariable createLocalVariable(String atomStr) {
+        numLocalVariables++;
+
+        int globalId;
+        // Check if the global copy has already been registered.
+        if (variableStringIndexes.containsKey(atomStr)) {
+            globalId = variableStringIndexes.get(atomStr);
+        } else {
+            // If the global copy has not been registered, register it and prep its local copies.
+            globalId = variableStringIndexes.size();
+            variableStringIndexes.put(atomStr, globalId);
+            // TODO: This is also the value of the variable lol
+            varVals.add(1.0f);
+//            variableValues.put(atomStr, 1.0f);
+            localVariables.add(new ArrayList<LocalVariable>());
+        }
+
+        // TODO: Let's hope the value doesn't matter
+        LocalVariable localVariable = new LocalVariable(globalId, 1.0f);
+        localVariables.get(globalId).add(localVariable);
+
+        return localVariable;
+    }
+
     public int getNumLocalVariables() {
         return numLocalVariables;
     }
 
     public int getNumGlobalVariables() {
-        return variableIndexes.size();
+//        return variableIndexes.size();
+        return variableStringIndexes.size();
     }
 
     public List<LocalVariable> getLocalVariables(int globalId) {
@@ -132,6 +169,10 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
         return Collections.unmodifiableMap(variableIndexes);
     }
 
+    public Map<String, Integer> getGlobalVariablesByString() {
+        return Collections.unmodifiableMap(variableStringIndexes);
+    }
+
     /**
      * Update the global variables (RVAs).
      * The passed in values in indexed according to global id.
@@ -140,6 +181,11 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
         for (Map.Entry<RandomVariableAtom, Integer> entry : variableIndexes.entrySet()) {
             entry.getKey().setValue(values[entry.getValue().intValue()]);
         }
+
+        // MATT: We keep values in the separate list, these are used in ResetLocalVariables I believe
+        for (int i = 0; i < values.length; ++i) {
+            varVals.set(i, values[i]);
+        }
     }
 
     /**
@@ -147,8 +193,13 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
      * variables and put them in the output array.
      */
     public void getAtomValues(float[] values) {
-        for (Map.Entry<RandomVariableAtom, Integer> entry : variableIndexes.entrySet()) {
-            values[entry.getValue().intValue()] = (float)entry.getKey().getValue();
+//        for (Map.Entry<RandomVariableAtom, Integer> entry : variableIndexes.entrySet()) {
+//            values[entry.getValue().intValue()] = (float)entry.getKey().getValue();
+//        }
+
+        // MATT: Our version, we store the values in varVals instead
+        for (int i = 0; i < varVals.size(); ++i) {
+            values[i] = varVals.get(i);
         }
     }
 
@@ -165,6 +216,23 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
                     local.setValue(RandUtils.nextFloat());
                 } else if (initialValue == ADMMReasoner.InitialValue.ATOM) {
                     local.setValue((float)(entry.getKey().getValue()));
+                } else {
+                    throw new IllegalStateException("Unknown initial consensus value: " + initialValue);
+                }
+
+                local.setLagrange(0.0f);
+            }
+        }
+
+        // MATT: For our version the reset is done through the variableStringIndexes
+        for (Map.Entry<String, Integer> entry : variableStringIndexes.entrySet()) {
+            for (LocalVariable local : localVariables.get(entry.getValue())) {
+                if (initialValue == ADMMReasoner.InitialValue.ZERO) {
+                    local.setValue(0.0f);
+                } else if (initialValue == ADMMReasoner.InitialValue.RANDOM) {
+                    local.setValue(RandUtils.nextFloat());
+                } else if (initialValue == ADMMReasoner.InitialValue.ATOM) {
+                    local.setValue((float)(varVals.get(entry.getValue())));
                 } else {
                     throw new IllegalStateException("Unknown initial consensus value: " + initialValue);
                 }
