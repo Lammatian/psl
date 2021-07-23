@@ -1,0 +1,4 @@
+[
+{"potential":"f1","rule_weight":5,"constant":0,"variables":{"positive":["y1"],"negative":[]},"squared":true}
+,{"potential":"f2","rule_weight":3,"constant":1,"variables":{"positive":[],"negative":["y1"]},"squared":true}
+]

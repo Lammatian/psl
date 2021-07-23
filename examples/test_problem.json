@@ -1,0 +1,4 @@
+[
+{"potential":"f1","rule_weight":"1","squared":true,"constant":"1","variables":{"positive":[],"negative":["idb(1,2)"]}},
+{"potential":"f2","rule_weight":"0.5","squared":false,"constant":"0","variables":{"positive":["idb(1,2)"],"negative":["idb(2,1)"]}}
+]

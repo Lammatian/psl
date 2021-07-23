@@ -74,6 +74,7 @@ public class CommandLineLoader {
     public static final String OPTION_OUTPUT_DIR_LONG = "output";
     public static final String OPTION_OUTPUT_GROUND_RULES_LONG = "groundrules";
     public static final String OPTION_OUTPUT_SATISFACTION_LONG = "satisfaction";
+    public static final String OPTION_POTENTIALS_JSON_FILE_PATH = "pots";
     public static final String OPTION_PROPERTIES = "D";
     public static final String OPTION_PROPERTIES_FILE = "p";
     public static final String OPTION_PROPERTIES_FILE_LONG = "properties";
@@ -331,6 +332,14 @@ public class CommandLineLoader {
                 .longOpt(OPTION_SKIP_ATOM_COMMIT_LONG)
                 .desc("Skip persisting atoms to database after inference.")
                 .optionalArg(true)
+                .build());
+
+        newOptions.addOption(Option.builder()
+                .longOpt(OPTION_POTENTIALS_JSON_FILE_PATH)
+                .desc("The path to the JSON file with the potentials.")
+                .optionalArg(true)
+                .hasArg()
+                .argName("path")
                 .build());
 
         return newOptions;

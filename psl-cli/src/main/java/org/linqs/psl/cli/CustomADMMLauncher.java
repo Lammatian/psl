@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import org.apache.commons.cli.CommandLine;
 import org.linqs.psl.model.atom.GroundAtom;
 import org.linqs.psl.model.rule.*;
 import org.linqs.psl.parser.CommandLineLoader;
@@ -78,15 +79,16 @@ public class CustomADMMLauncher {
     public static void main(String[] args) {
         try {
             CommandLineLoader commandLineLoader = new CommandLineLoader(args);
-//            CommandLine givenOptions = commandLineLoader.getParsedOptions();
+            CommandLine givenOptions = commandLineLoader.getParsedOptions();
+            if (givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_JSON_FILE_PATH) == null) {
+                return;
+            };
 
-            // Should return 0:
-//            String path = "/home/mateusz/Dropbox/Oxford/Thesis/Solvers/FirstExamples/hl_mrfPotentials_N1000.json";
-            // Should return 1.875 (with y1 = w2/(w1 + w2) = 0.375):
-            String path = "/home/mateusz/Dropbox/Oxford/Thesis/Solvers/FirstExamples/simple_squared_example.json";
-            // Should return 0.207 (first example):
-//            String path = "/home/mateusz/Dropbox/Oxford/Thesis/Solvers/ProblemCreator/first_example.json";
+            // "examples/hl_mrfPotentials_N1000.json" should return 0
+            // "examples/simple_squared_example.json" should return 1.875 (with y1 = w2/(w1 + w2) = 0.375)
+            // "examples/first_example.json" should return 0.207 (first example):
 
+            String path = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_JSON_FILE_PATH);
             Path p = Paths.get(path);
             JSONParser jsonParser = new JSONParser(p);
 

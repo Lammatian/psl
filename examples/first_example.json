@@ -1,0 +1,284 @@
+[
+    {
+        "constant": "1",
+        "potential": "g0",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y0",
+                "y4",
+                "y8"
+            ],
+            "positive": []
+        }
+    },
+    {
+        "constant": "1",
+        "potential": "g1",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y1",
+                "y5",
+                "y9"
+            ],
+            "positive": []
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g2",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y0"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g3",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y2"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g4",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y1"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g5",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y3"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g6",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y5"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g7",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y4"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g8",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y6"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g9",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y7"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g10",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y8"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g11",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y9"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g12",
+        "rule_weight": "0.1",
+        "squared": true,
+        "variables": {
+            "negative": [],
+            "positive": [
+                "y10"
+            ]
+        }
+    },
+    {
+        "constant": "0.7",
+        "potential": "g13",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y1"
+            ],
+            "positive": []
+        }
+    },
+    {
+        "constant": "1",
+        "potential": "g14",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y0"
+            ],
+            "positive": []
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g15",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y2"
+            ],
+            "positive": [
+                "y1"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g16",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y4"
+            ],
+            "positive": [
+                "y3"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g17",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y6"
+            ],
+            "positive": [
+                "y5"
+            ]
+        }
+    },
+    {
+        "constant": "-0.3",
+        "potential": "g18",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y5"
+            ],
+            "positive": [
+                "y3"
+            ]
+        }
+    },
+    {
+        "constant": "-0.3",
+        "potential": "g19",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y9"
+            ],
+            "positive": [
+                "y7"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g20",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y8"
+            ],
+            "positive": [
+                "y7"
+            ]
+        }
+    },
+    {
+        "constant": "0",
+        "potential": "g21",
+        "rule_weight": "1",
+        "squared": false,
+        "variables": {
+            "negative": [
+                "y10"
+            ],
+            "positive": [
+                "y9"
+            ]
+        }
+    }
+]
