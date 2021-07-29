@@ -94,7 +94,6 @@ public class CustomADMMLauncher {
 
             ArrayList<MyGroundRule> myGroundRules = new ArrayList<>();
             ArrayList<ADMMObjectiveTerm> terms = new ArrayList<>();
-            HashMap<String, Integer> seenVars = new HashMap<>();
             ADMMTermStore termStore = new ADMMTermStore();
 
             for (JSONParser.Potential potential : jsonParser.getPotentials()) {
@@ -106,14 +105,12 @@ public class CustomADMMLauncher {
                 for (String posVar : potential.getPositiveVariables()) {
                     LocalVariable lv = termStore.createLocalVariable(posVar);
                     lvs.add(lv);
-                    // TODO: Check
                     coeffs.add(1.0f);
                 }
 
                 for (String negVar : potential.getNegativeVariables()) {
                     LocalVariable lv = termStore.createLocalVariable(negVar);
                     lvs.add(lv);
-                    // TODO: Check
                     coeffs.add(-1.0f);
                 }
 
@@ -147,8 +144,8 @@ public class CustomADMMLauncher {
             ADMMReasoner admmReasoner = new ADMMReasoner();
             admmReasoner.optimize(termStore);
 
-            for (float val : termStore.varVals) {
-                System.out.println(val);
+            for (Map.Entry<String, Integer> entry : termStore.variableStringIndexes.entrySet()) {
+                System.out.println(entry.getKey() + ": " + termStore.variableValues.get(entry.getValue()));
             }
         } catch (Exception e) {
             System.out.println(e.toString());

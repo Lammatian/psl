@@ -22,7 +22,6 @@ import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.reasoner.admm.ADMMReasoner;
 import org.linqs.psl.reasoner.term.MemoryTermStore;
-import org.linqs.psl.reasoner.term.ReasonerLocalVariable;
 import org.linqs.psl.reasoner.term.TermStore;
 import org.linqs.psl.util.IteratorUtils;
 import org.linqs.psl.util.RandUtils;
@@ -52,10 +51,9 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
     private TermStore<ADMMObjectiveTerm, ?> store;
 
     public Map<RandomVariableAtom, Integer> variableIndexes;
-    private Map<String, Integer> variableStringIndexes;
+    public Map<String, Integer> variableStringIndexes;
     // MATT: Required because we're not using RVAs
-    public ArrayList<Float> varVals;
-//    private Map<String, Float> variableValues;
+    public ArrayList<Float> variableValues;
 
     // Global variable index to local variables.
     private List<List<LocalVariable>> localVariables;
@@ -74,7 +72,7 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
         this.store = store;
         variableIndexes = new HashMap<RandomVariableAtom, Integer>();
         variableStringIndexes = new HashMap<>();
-        varVals = new ArrayList<>();
+        variableValues = new ArrayList<>();
         localVariables = new ArrayList<List<LocalVariable>>();
         numLocalVariables = 0;
     }
@@ -125,6 +123,7 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
         return localVariable;
     }
 
+    // MATT: Our String version of creating a variable as we have a string index
     public LocalVariable createLocalVariable(String atomStr) {
         numLocalVariables++;
 
@@ -136,14 +135,13 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
             // If the global copy has not been registered, register it and prep its local copies.
             globalId = variableStringIndexes.size();
             variableStringIndexes.put(atomStr, globalId);
-            // TODO: This is also the value of the variable lol
-            varVals.add(1.0f);
-//            variableValues.put(atomStr, 1.0f);
+            // TODO: Let's hope the value doesn't matter. It shouldn't as the values are reset either way
+            variableValues.add(0.0f);
             localVariables.add(new ArrayList<LocalVariable>());
         }
 
-        // TODO: Let's hope the value doesn't matter
-        LocalVariable localVariable = new LocalVariable(globalId, 1.0f);
+        // TODO: Let's hope the value doesn't matter. It shouldn't as the values are reset either way
+        LocalVariable localVariable = new LocalVariable(globalId, 0.0f);
         localVariables.get(globalId).add(localVariable);
 
         return localVariable;
@@ -184,7 +182,7 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
 
         // MATT: We keep values in the separate list, these are used in ResetLocalVariables I believe
         for (int i = 0; i < values.length; ++i) {
-            varVals.set(i, values[i]);
+            variableValues.set(i, values[i]);
         }
     }
 
@@ -193,13 +191,15 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
      * variables and put them in the output array.
      */
     public void getAtomValues(float[] values) {
-//        for (Map.Entry<RandomVariableAtom, Integer> entry : variableIndexes.entrySet()) {
-//            values[entry.getValue().intValue()] = (float)entry.getKey().getValue();
-//        }
+        for (Map.Entry<RandomVariableAtom, Integer> entry : variableIndexes.entrySet()) {
+            values[entry.getValue().intValue()] = (float)entry.getKey().getValue();
+        }
 
         // MATT: Our version, we store the values in varVals instead
-        for (int i = 0; i < varVals.size(); ++i) {
-            values[i] = varVals.get(i);
+        // MATT: If this gets used, then we will just initialise the values to 0.0f
+        // MATT: For now we are using the random initial consensus anyway
+        for (int i = 0; i < variableValues.size(); ++i) {
+            values[i] = variableValues.get(i);
         }
     }
 
@@ -232,7 +232,7 @@ public class ADMMTermStore implements TermStore<ADMMObjectiveTerm, LocalVariable
                 } else if (initialValue == ADMMReasoner.InitialValue.RANDOM) {
                     local.setValue(RandUtils.nextFloat());
                 } else if (initialValue == ADMMReasoner.InitialValue.ATOM) {
-                    local.setValue((float)(varVals.get(entry.getValue())));
+                    local.setValue((float)(variableValues.get(entry.getValue())));
                 } else {
                     throw new IllegalStateException("Unknown initial consensus value: " + initialValue);
                 }
