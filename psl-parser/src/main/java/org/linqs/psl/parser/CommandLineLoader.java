@@ -74,7 +74,16 @@ public class CommandLineLoader {
     public static final String OPTION_OUTPUT_DIR_LONG = "output";
     public static final String OPTION_OUTPUT_GROUND_RULES_LONG = "groundrules";
     public static final String OPTION_OUTPUT_SATISFACTION_LONG = "satisfaction";
-    public static final String OPTION_POTENTIALS_JSON_FILE_PATH = "pots";
+    public static final String OPTION_POTENTIALS_JSON_FILE_PATH = "f";
+    public static final String OPTION_POTENTIALS_JSON_FILE_PATH_LONG = "file";
+    public static final String OPTION_POTENTIALS_PRINT_SOLUTION = "ps";
+    public static final String OPTION_POTENTIALS_PRINT_SOLUTION_LONG = "print_sol";
+    public static final String OPTION_POTENTIALS_SAVE_SOLUTION = "ss";
+    public static final String OPTION_POTENTIALS_SAVE_SOLUTION_LONG = "save_sol";
+    public static final String OPTION_POTENTIALS_PRINT_TIME = "pt";
+    public static final String OPTION_POTENTIALS_PRINT_TIME_LONG = "print_time";
+    public static final String OPTION_POTENTIALS_SAVE_TIME = "st";
+    public static final String OPTION_POTENTIALS_SAVE_TIME_LONG = "save_time";
     public static final String OPTION_PROPERTIES = "D";
     public static final String OPTION_PROPERTIES_FILE = "p";
     public static final String OPTION_PROPERTIES_FILE_LONG = "properties";
@@ -334,12 +343,40 @@ public class CommandLineLoader {
                 .optionalArg(true)
                 .build());
 
-        newOptions.addOption(Option.builder()
-                .longOpt(OPTION_POTENTIALS_JSON_FILE_PATH)
+        newOptions.addOption(Option.builder(OPTION_POTENTIALS_JSON_FILE_PATH)
+                .longOpt(OPTION_POTENTIALS_JSON_FILE_PATH_LONG)
                 .desc("The path to the JSON file with the potentials.")
                 .optionalArg(true)
                 .hasArg()
-                .argName("path")
+                .required()
+                .build());
+
+        newOptions.addOption(Option.builder(OPTION_POTENTIALS_PRINT_SOLUTION)
+                .longOpt(OPTION_POTENTIALS_PRINT_SOLUTION_LONG)
+                .desc("Print the optimal solution objective and variable values.")
+                .optionalArg(true)
+                .build());
+
+        newOptions.addOption(Option.builder(OPTION_POTENTIALS_SAVE_SOLUTION)
+                .longOpt(OPTION_POTENTIALS_SAVE_SOLUTION_LONG)
+                .desc("Save the optimal solution and variable values to a specified path. " +
+                      "Works only if --print_sol is specified.")
+                .optionalArg(true)
+                .hasArg()
+                .build());
+
+        newOptions.addOption(Option.builder(OPTION_POTENTIALS_PRINT_TIME)
+                .longOpt(OPTION_POTENTIALS_PRINT_TIME_LONG)
+                .desc("Print the timing information.")
+                .optionalArg(true)
+                .build());
+
+        newOptions.addOption(Option.builder(OPTION_POTENTIALS_SAVE_TIME)
+                .longOpt(OPTION_POTENTIALS_SAVE_TIME_LONG)
+                .desc("Save the timing information to a specified path." +
+                      "Works only if --print_sol is specified")
+                .optionalArg(true)
+                .hasArg()
                 .build());
 
         return newOptions;

@@ -1,5 +1,7 @@
 package org.linqs.psl.cli;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -76,76 +78,120 @@ class MyGroundRule implements WeightedGroundRule {
 public class CustomADMMLauncher {
     private static final Logger log = LoggerFactory.getLogger(CustomADMMLauncher.class);
 
+    private static ADMMTermStore generateTermStore(Path jsonPath) {
+        JSONParser jsonParser = new JSONParser(jsonPath);
+
+        ArrayList<MyGroundRule> myGroundRules = new ArrayList<>();
+        ArrayList<ADMMObjectiveTerm> terms = new ArrayList<>();
+        ADMMTermStore termStore = new ADMMTermStore();
+
+        for (JSONParser.Potential potential : jsonParser.getPotentials()) {
+            MyGroundRule myGroundRule = new MyGroundRule(potential.getWeight());
+
+            ArrayList<LocalVariable> lvs = new ArrayList<>();
+            ArrayList<Float> coeffs = new ArrayList<>();
+
+            for (String posVar : potential.getPositiveVariables()) {
+                LocalVariable lv = termStore.createLocalVariable(posVar);
+                lvs.add(lv);
+                coeffs.add(1.0f);
+            }
+
+            for (String negVar : potential.getNegativeVariables()) {
+                LocalVariable lv = termStore.createLocalVariable(negVar);
+                lvs.add(lv);
+                coeffs.add(-1.0f);
+            }
+
+            float constant = potential.getConstant();
+            int size = lvs.size();
+            float[] coeffsArray = new float[lvs.size()];
+            for (int i = 0; i < size; ++i) {
+                coeffsArray[i] = coeffs.get(i);
+            }
+
+            Hyperplane<LocalVariable> hp = new Hyperplane<>(lvs.toArray(LocalVariable[]::new),
+                    coeffsArray,
+                    -constant,
+                    size);
+
+            ADMMObjectiveTerm term;
+            if (potential.isSquared()) {
+                term = new SquaredHingeLossTerm(myGroundRule, hp);
+            } else {
+                term = new HingeLossTerm(myGroundRule, hp);
+            }
+
+            myGroundRules.add(myGroundRule);
+            terms.add(term);
+        }
+
+        for (int i = 0; i < myGroundRules.size(); ++i) {
+            termStore.add(myGroundRules.get(i), terms.get(i));
+        }
+
+        return termStore;
+    }
+
+    private static void writeSolution(PrintWriter out, ADMMReasoner reasoner, ADMMTermStore termStore) {
+        out.println("Objective value: " + reasoner.objectiveValue);
+
+        for (Map.Entry<String, Integer> entry : termStore.variableStringIndexes.entrySet()) {
+            out.println(entry.getKey() + ": " + termStore.variableValues.get(entry.getValue()));
+        }
+    }
+
     public static void main(String[] args) {
         try {
             CommandLineLoader commandLineLoader = new CommandLineLoader(args);
             CommandLine givenOptions = commandLineLoader.getParsedOptions();
             if (givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_JSON_FILE_PATH) == null) {
                 return;
-            };
+            }
 
             // "examples/hl_mrfPotentials_N1000.json" should return 0
             // "examples/simple_squared_example.json" should return 1.875 (with y1 = w2/(w1 + w2) = 0.375)
-            // "examples/first_example.json" should return 0.207 (first example):
+            // "examples/first_example.json" should return 0.207
 
             String path = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_JSON_FILE_PATH);
-            Path p = Paths.get(path);
-            JSONParser jsonParser = new JSONParser(p);
-
-            ArrayList<MyGroundRule> myGroundRules = new ArrayList<>();
-            ArrayList<ADMMObjectiveTerm> terms = new ArrayList<>();
-            ADMMTermStore termStore = new ADMMTermStore();
-
-            for (JSONParser.Potential potential : jsonParser.getPotentials()) {
-                MyGroundRule myGroundRule = new MyGroundRule(potential.getWeight());
-
-                ArrayList<LocalVariable> lvs = new ArrayList<>();
-                ArrayList<Float> coeffs = new ArrayList<>();
-
-                for (String posVar : potential.getPositiveVariables()) {
-                    LocalVariable lv = termStore.createLocalVariable(posVar);
-                    lvs.add(lv);
-                    coeffs.add(1.0f);
-                }
-
-                for (String negVar : potential.getNegativeVariables()) {
-                    LocalVariable lv = termStore.createLocalVariable(negVar);
-                    lvs.add(lv);
-                    coeffs.add(-1.0f);
-                }
-
-                float constant = potential.getConstant();
-                int size = lvs.size();
-                float[] coeffsArray = new float[lvs.size()];
-                for (int i = 0; i < size; ++i) {
-                    coeffsArray[i] = coeffs.get(i);
-                }
-
-                Hyperplane<LocalVariable> hp = new Hyperplane<>(lvs.toArray(LocalVariable[]::new),
-                        coeffsArray,
-                        -constant,
-                        size);
-
-                ADMMObjectiveTerm term;
-                if (potential.isSquared()) {
-                    term = new SquaredHingeLossTerm(myGroundRule, hp);
-                } else {
-                    term = new HingeLossTerm(myGroundRule, hp);
-                }
-
-                myGroundRules.add(myGroundRule);
-                terms.add(term);
-            }
-
-            for (int i = 0; i < myGroundRules.size(); ++i) {
-                termStore.add(myGroundRules.get(i), terms.get(i));
-            }
-
+            ADMMTermStore termStore = generateTermStore(Paths.get(path));
             ADMMReasoner admmReasoner = new ADMMReasoner();
-            admmReasoner.optimize(termStore);
 
-            for (Map.Entry<String, Integer> entry : termStore.variableStringIndexes.entrySet()) {
-                System.out.println(entry.getKey() + ": " + termStore.variableValues.get(entry.getValue()));
+            // TODO: This is not very reliable for benchmarking with a JVM as it 'warms up'
+            // TODO: See https://stackoverflow.com/questions/7467245/cpu-execution-time-in-java
+            long startTime = System.nanoTime();
+            admmReasoner.optimize(termStore);
+            long endTime = System.nanoTime();
+
+            if (givenOptions.hasOption(CommandLineLoader.OPTION_POTENTIALS_PRINT_SOLUTION)) {
+                PrintWriter printWriter;
+
+                String savePath = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_SAVE_SOLUTION);
+                if (savePath != null) {
+                    printWriter = new PrintWriter(new FileOutputStream(savePath), true);
+                }
+                else {
+                    printWriter = new PrintWriter(System.out, true);
+                }
+
+                writeSolution(printWriter, admmReasoner, termStore);
+                printWriter.close();
+            }
+
+            if (givenOptions.hasOption(CommandLineLoader.OPTION_POTENTIALS_PRINT_TIME)) {
+                PrintWriter printWriter;
+
+                String savePath = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_SAVE_TIME);
+                if (savePath != null) {
+                    printWriter = new PrintWriter(new FileOutputStream(savePath), true);
+                }
+                else {
+                    printWriter = new PrintWriter(System.out, true);
+                }
+
+                double runtimeSeconds = (double)(endTime - startTime) / 1_000_000_000.0;
+                printWriter.println(runtimeSeconds);
+                printWriter.close();
             }
         } catch (Exception e) {
             System.out.println(e.toString());

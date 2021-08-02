@@ -142,6 +142,8 @@ public class ADMMReasoner implements Reasoner {
     private int variableBlockSize;
     private boolean objectiveBreak;
 
+    public float objectiveValue;
+
     public ADMMReasoner() {
         maxIter = Config.getInt(MAX_ITER_KEY, MAX_ITER_DEFAULT);
         stepSize = Config.getFloat(STEP_SIZE_KEY, STEP_SIZE_DEFAULT);
@@ -157,6 +159,8 @@ public class ADMMReasoner implements Reasoner {
         if (epsilonRel <= 0) {
             throw new IllegalArgumentException("Property " + EPSILON_REL_KEY + " must be positive.");
         }
+
+        objectiveValue = 0.0f;
     }
 
     public int getMaxIter() {
@@ -291,6 +295,8 @@ public class ADMMReasoner implements Reasoner {
 
         // Updates variables
         termStore.updateVariables(consensusValues);
+        // Updates objective
+        objectiveValue = objective.objective;
     }
 
     @Override
