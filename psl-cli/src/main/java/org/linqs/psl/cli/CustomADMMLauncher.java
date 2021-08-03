@@ -168,30 +168,36 @@ public class CustomADMMLauncher {
 
                 String savePath = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_SAVE_SOLUTION);
                 if (savePath != null) {
+                    System.out.println("Saving solution information to " + savePath);
                     printWriter = new PrintWriter(new FileOutputStream(savePath), true);
+                    writeSolution(printWriter, admmReasoner, termStore);
+                    printWriter.close();
+                    System.out.println("Done.");
                 }
                 else {
                     printWriter = new PrintWriter(System.out, true);
+                    writeSolution(printWriter, admmReasoner, termStore);
+                    // We're not closing System.out
                 }
-
-                writeSolution(printWriter, admmReasoner, termStore);
-                printWriter.close();
             }
 
             if (givenOptions.hasOption(CommandLineLoader.OPTION_POTENTIALS_PRINT_TIME)) {
                 PrintWriter printWriter;
+                double runtimeSeconds = (double)(endTime - startTime) / 1_000_000_000.0;
 
                 String savePath = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_SAVE_TIME);
                 if (savePath != null) {
+                    System.out.println("Saving time information to " + savePath);
                     printWriter = new PrintWriter(new FileOutputStream(savePath), true);
+                    printWriter.println(runtimeSeconds);
+                    printWriter.close();
+                    System.out.println("Done.");
                 }
                 else {
                     printWriter = new PrintWriter(System.out, true);
+                    printWriter.println(runtimeSeconds);
+                    // We're not closing System.out
                 }
-
-                double runtimeSeconds = (double)(endTime - startTime) / 1_000_000_000.0;
-                printWriter.println(runtimeSeconds);
-                printWriter.close();
             }
         } catch (Exception e) {
             System.out.println(e.toString());
