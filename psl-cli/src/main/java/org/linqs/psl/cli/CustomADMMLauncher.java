@@ -77,8 +77,9 @@ class MyGroundRule implements WeightedGroundRule {
 
 public class CustomADMMLauncher {
     private static final Logger log = LoggerFactory.getLogger(CustomADMMLauncher.class);
+    private static final float DEFAULT_BIAS_WEIGHT = 0.01f;
 
-    private static ADMMTermStore generateTermStore(Path jsonPath) {
+    private static ADMMTermStore generateTermStore(Path jsonPath, float bias) {
         JSONParser jsonParser = new JSONParser(jsonPath);
 
         ArrayList<MyGroundRule> myGroundRules = new ArrayList<>();
@@ -126,6 +127,20 @@ public class CustomADMMLauncher {
             terms.add(term);
         }
 
+        if (Math.signum(bias) != 0) {
+            for (Map.Entry<String, Integer> entry : termStore.getGlobalVariablesByString().entrySet()) {
+                MyGroundRule myGroundRule = new MyGroundRule(1.0);
+                LocalVariable lv = termStore.createLocalVariable(entry.getKey());
+                float[] coeffs = {bias};
+                LocalVariable[] lvs = {lv};
+                Hyperplane<LocalVariable> hp = new Hyperplane<>(lvs, coeffs, 0f, 1);
+
+                ADMMObjectiveTerm term = new LinearLossTerm(myGroundRule, hp);
+                myGroundRules.add(myGroundRule);
+                terms.add(term);
+            }
+        }
+
         for (int i = 0; i < myGroundRules.size(); ++i) {
             termStore.add(myGroundRules.get(i), terms.get(i));
         }
@@ -154,7 +169,18 @@ public class CustomADMMLauncher {
             // "examples/first_example.json" should return 0.207
 
             String path = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_JSON_FILE_PATH);
-            ADMMTermStore termStore = generateTermStore(Paths.get(path));
+            float bias = 0f;
+            if (givenOptions.hasOption(CommandLineLoader.OPTION_POTENTIALS_BIAS)) {
+                String parsedBias = givenOptions.getOptionValue(CommandLineLoader.OPTION_POTENTIALS_BIAS);
+
+                if (parsedBias == null) {
+                    bias = DEFAULT_BIAS_WEIGHT;
+                }
+                else {
+                    bias = Float.parseFloat(parsedBias);
+                }
+            }
+            ADMMTermStore termStore = generateTermStore(Paths.get(path), bias);
             ADMMReasoner admmReasoner = new ADMMReasoner();
 
             // TODO: This is not very reliable for benchmarking with a JVM as it 'warms up'
@@ -177,7 +203,7 @@ public class CustomADMMLauncher {
                 else {
                     printWriter = new PrintWriter(System.out, true);
                     writeSolution(printWriter, admmReasoner, termStore);
-                    // We're not closing System.out
+                    // We're intentionally not closing System.out
                 }
             }
 

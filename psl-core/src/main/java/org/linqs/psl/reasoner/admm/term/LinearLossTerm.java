@@ -31,7 +31,7 @@ public class LinearLossTerm extends ADMMObjectiveTerm {
     /**
      * Caller releases control of |variables| and |coefficients|.
      */
-    LinearLossTerm(GroundRule groundRule, Hyperplane<LocalVariable> hyperplane) {
+    public LinearLossTerm(GroundRule groundRule, Hyperplane<LocalVariable> hyperplane) {
         super(hyperplane, groundRule);
 
         this.coefficients = hyperplane.getCoefficients();

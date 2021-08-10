@@ -76,6 +76,8 @@ public class CommandLineLoader {
     public static final String OPTION_OUTPUT_SATISFACTION_LONG = "satisfaction";
     public static final String OPTION_POTENTIALS_JSON_FILE_PATH = "f";
     public static final String OPTION_POTENTIALS_JSON_FILE_PATH_LONG = "file";
+    public static final String OPTION_POTENTIALS_BIAS = "b";
+    public static final String OPTION_POTENTIALS_BIAS_LONG = "bias";
     public static final String OPTION_POTENTIALS_PRINT_SOLUTION = "ps";
     public static final String OPTION_POTENTIALS_PRINT_SOLUTION_LONG = "print_sol";
     public static final String OPTION_POTENTIALS_SAVE_SOLUTION = "ss";
@@ -346,9 +348,17 @@ public class CommandLineLoader {
         newOptions.addOption(Option.builder(OPTION_POTENTIALS_JSON_FILE_PATH)
                 .longOpt(OPTION_POTENTIALS_JSON_FILE_PATH_LONG)
                 .desc("The path to the JSON file with the potentials.")
+                .hasArg()
+                .optionalArg(true)
+                .type(Float.class)
+                .required()
+                .build());
+
+        newOptions.addOption(Option.builder(OPTION_POTENTIALS_BIAS)
+                .longOpt(OPTION_POTENTIALS_BIAS_LONG)
+                .desc("Add a specified bias value for each variable to the objective function (default 0.01)")
                 .optionalArg(true)
                 .hasArg()
-                .required()
                 .build());
 
         newOptions.addOption(Option.builder(OPTION_POTENTIALS_PRINT_SOLUTION)
