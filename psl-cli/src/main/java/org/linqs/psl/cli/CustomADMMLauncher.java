@@ -78,6 +78,7 @@ class MyGroundRule implements WeightedGroundRule {
 public class CustomADMMLauncher {
     private static final Logger log = LoggerFactory.getLogger(CustomADMMLauncher.class);
     private static final float DEFAULT_BIAS_WEIGHT = 0.01f;
+    private static final int DEFAULT_TIMEOUT_SECONDS = 10 * 60;
 
     private static ADMMTermStore generateTermStore(Path jsonPath, float bias) {
         JSONParser jsonParser = new JSONParser(jsonPath);
@@ -181,7 +182,7 @@ public class CustomADMMLauncher {
                 }
             }
             ADMMTermStore termStore = generateTermStore(Paths.get(path), bias);
-            ADMMReasoner admmReasoner = new ADMMReasoner();
+            ADMMReasoner admmReasoner = new ADMMReasoner(DEFAULT_TIMEOUT_SECONDS);
 
             // TODO: This is not very reliable for benchmarking with a JVM as it 'warms up'
             // TODO: See https://stackoverflow.com/questions/7467245/cpu-execution-time-in-java

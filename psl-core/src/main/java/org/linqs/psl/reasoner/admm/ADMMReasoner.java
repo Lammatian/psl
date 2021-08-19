@@ -144,6 +144,10 @@ public class ADMMReasoner implements Reasoner {
 
     public float objectiveValue;
 
+    private boolean hasTimeout;
+    private double timeout;
+    private long startTime;
+
     public ADMMReasoner() {
         maxIter = Config.getInt(MAX_ITER_KEY, MAX_ITER_DEFAULT);
         stepSize = Config.getFloat(STEP_SIZE_KEY, STEP_SIZE_DEFAULT);
@@ -161,6 +165,28 @@ public class ADMMReasoner implements Reasoner {
         }
 
         objectiveValue = 0.0f;
+    }
+
+    public ADMMReasoner(double timeout) {
+        maxIter = Config.getInt(MAX_ITER_KEY, MAX_ITER_DEFAULT);
+        stepSize = Config.getFloat(STEP_SIZE_KEY, STEP_SIZE_DEFAULT);
+        computePeriod = Config.getInt(COMPUTE_PERIOD_KEY, COMPUTE_PERIOD_DEFAULT);
+        objectiveBreak = Config.getBoolean(OBJECTIVE_BREAK_KEY, OBJECTIVE_BREAK_DEFAULT);
+
+        epsilonAbs = Config.getFloat(EPSILON_ABS_KEY, EPSILON_ABS_DEFAULT);
+        if (epsilonAbs <= 0) {
+            throw new IllegalArgumentException("Property " + EPSILON_ABS_KEY + " must be positive.");
+        }
+
+        epsilonRel = Config.getFloat(EPSILON_REL_KEY, EPSILON_REL_DEFAULT);
+        if (epsilonRel <= 0) {
+            throw new IllegalArgumentException("Property " + EPSILON_REL_KEY + " must be positive.");
+        }
+
+        objectiveValue = 0.0f;
+
+        hasTimeout = true;
+        this.timeout = timeout;
     }
 
     public int getMaxIter() {
@@ -205,6 +231,10 @@ public class ADMMReasoner implements Reasoner {
         optimize(baseTermStore, initialConsensus, initialLocal);
     }
 
+    private double getRuntimeInSeconds() {
+        return (double)(System.nanoTime() - startTime) / 1_000_000_000.0;
+    }
+
     public void optimize(TermStore baseTermStore, InitialValue initialConsensus, InitialValue initialLocal) {
         if (!(baseTermStore instanceof ADMMTermStore)) {
             throw new IllegalArgumentException("ADMMReasoner requires an ADMMTermStore (found " + baseTermStore.getClass().getName() + ").");
@@ -239,11 +269,13 @@ public class ADMMReasoner implements Reasoner {
                     0, objective.objective, (objective.violatedConstraints == 0));
         }
 
+        startTime = System.nanoTime();
         int iteration = 1;
         while (
                 (iteration == 1 || primalRes > epsilonPrimal || dualRes > epsilonDual)
                 && (!objectiveBreak || (oldObjective == null || !MathUtils.equals(objective.objective, oldObjective.objective)))
-                && iteration <= maxIter) {
+                && iteration <= maxIter
+                && (!hasTimeout || getRuntimeInSeconds() <= timeout)) {
             // Zero out the iteration variables.
             primalRes = 0.0f;
             dualRes = 0.0f;
@@ -290,8 +322,13 @@ public class ADMMReasoner implements Reasoner {
             log.warn("No feasible solution found. {} constraints violated.", objective.violatedConstraints);
         }
 
-        log.info("Optimization completed in {} iterations. Objective: {}, Feasible: {}, Primal res.: {}, Dual res.: {}",
-                iteration - 1, objective.objective, (objective.violatedConstraints == 0), primalRes, dualRes);
+        if (hasTimeout && getRuntimeInSeconds() >= timeout) {
+            log.info("Optimisation timed out");
+        }
+        else {
+            log.info("Optimization completed in {} iterations. Objective: {}, Feasible: {}, Primal res.: {}, Dual res.: {}",
+                    iteration - 1, objective.objective, (objective.violatedConstraints == 0), primalRes, dualRes);
+        }
 
         // Updates variables
         termStore.updateVariables(consensusValues);
